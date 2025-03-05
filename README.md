@@ -34,8 +34,25 @@ A Python-based data parsing tool designed to extract contact information (emails
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Gerrgor/inn_parser.git
+   git clone https://github.com/your-username/inn-data-parser.git
+2. Navigate to the project directory:
+   ```bash
+   cd Gerrgor/inn_parser/parsing
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
+## Usage
+# Running from Source Code
+1. Navigate to the project directory:
+   ```bash
+   cd Gerrgor/inn_parser/parsing
+2. Run the application:
    ```bash
    python main.py
+# Running from Executable (.exe)
+1. Navigate to the directory containing the .exe file:
+   ```bash
+   cd Gerrgor/inn_parser
+2. Run the executable:
+   ```bash
+   ./inn_parser.exe
