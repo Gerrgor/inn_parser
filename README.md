@@ -14,7 +14,7 @@ A Python-based data parsing tool designed to extract contact information (emails
 
 1. **Input**: Provide an Excel file containing a list of INNs.
 2. **Source Selection**: Choose the data source (currently supports List-org).
-3. **Parsing**: The tool automatically navigates the website, extracts contact information, and handles CAPTCHA prompts.
+3. **Parsing**: The tool automatically navigates the website and extracts contact information
 4. **Output**: Results are saved in an Excel file at the specified location.
 
 ## Technologies Used
