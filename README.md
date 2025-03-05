@@ -35,5 +35,7 @@ A Python-based data parsing tool designed to extract contact information (emails
 1. Clone the repository:
    ```bash
    git clone https://github.com/Gerrgor/inn_parser.git
+   ```bash
    pip install -r requirements.txt
+   ```bash
    python main.py
