@@ -173,4 +173,4 @@ class Parser:
 
     def save_results_to_excel(self, results, save_file):
         results_df = pd.DataFrame(results)
-        results_df.to_excel(save_file, index=False)
+        results_df.to_excel(save_file, index=False)k
