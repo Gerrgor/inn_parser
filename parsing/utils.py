@@ -11,4 +11,4 @@ def validate_save_file(save_file):
     if not save_file:
         messagebox.showerror("Ошибка", "Пожалуйста, укажите путь для сохранения результата.")
         return False
-    return Truem
+    return True
