@@ -74,6 +74,117 @@ class Parser:
     def get_contact_info(self, driver):
         result = {}
 
+        # Получение полного юридического наименования
+        if 'Полное юридическое наименование' in self.selected_data:
+            try:
+                fullname_element = driver.find_element(By.XPATH, '//a[contains(@href, "/search?type=name")]')
+                result["Полное юридическое наименование"] = fullname_element.text
+            except NoSuchElementException:
+                result["Полное юридическое наименование"] = ""
+        
+        # Получение руководителя
+        if 'Руководитель' in self.selected_data:
+            dirnames = set()
+            for i in range(3, 6):
+                try:
+                    dirname_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/table/tbody/tr[2]/td[2]'
+                    dirname_element = driver.find_element(By.XPATH, dirname_xpath)
+                    dirname = dirname_element.text.strip()
+                    dirnames.add(dirname)
+                except NoSuchElementException:
+                    continue
+            result['Руководитель'] = ', '.join(dirnames) if dirnames else ""
+        
+        # Получение уставного капитала
+        if 'Уставной капитал' in self.selected_data:
+            capital_text = ""  # Инициализация переменной
+            for i in range(3, 6):
+                try:
+                    check_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/table/tbody/tr[4]/td[1]/i'
+                    check_element = driver.find_element(By.XPATH, check_xpath)
+                    check = check_element.text.strip()
+                    if check == 'Уставной капитал:':
+                        capital_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/table/tbody/tr[4]/td[2]'
+                        capital_element = driver.find_element(By.XPATH, capital_xpath)
+                        capital_text = capital_element.text
+                        break  # Выходим из цикла, если нашли значение
+                except NoSuchElementException:
+                    continue
+            result['Уставной капитал'] = capital_text
+
+        # Получение численности персонала
+        if 'Численность персонала' in self.selected_data:
+            staff_text = ""  # Инициализация переменной
+            for i in range(3, 6):
+                try:
+                    check_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/table/tbody/tr[5]/td[1]/i'
+                    check_element = driver.find_element(By.XPATH, check_xpath)
+                    check = check_element.text.strip()
+                    if check == 'Численность персонала:':
+                        staff_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/table/tbody/tr[5]/td[2]'
+                        staff_element = driver.find_element(By.XPATH, staff_xpath)
+                        staff_text = staff_element.text
+                        break  # Выходим из цикла, если нашли значение
+                except NoSuchElementException:
+                    continue
+            result['Численность персонала'] = staff_text
+
+        # Получение статуса
+        if 'Статус' in self.selected_data:
+            try:
+                status_element = driver.find_element(By.XPATH, '//td[contains(@class, "status")]')
+                result["Статус"] = status_element.text
+            except NoSuchElementException:
+                result["Статус"] = ""
+        
+        # Получение адреса
+        if 'Адрес' in self.selected_data:
+            index_text = ""  # Инициализация переменной
+            address_text = ""  # Инициализация переменной
+            for i in range(5, 8):
+                try:
+                    check_index_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div[1]/div/p[1]/i'
+                    check_index_element = driver.find_element(By.XPATH, check_index_xpath)
+                    check_index = check_index_element.text.strip()
+                    if check_index == 'Индекс:':
+                        index_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div[1]/div/p[1]'
+                        index_element = driver.find_element(By.XPATH, index_xpath)
+                        index_text = index_element.text.strip()
+                        if index_text.startswith("Индекс: "):
+                            index_text = index_text.replace("Индекс: ", "").strip()
+                except NoSuchElementException:
+                    continue
+                try:
+                    check_address_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div[1]/div/p[2]/i'
+                    check_address_element = driver.find_element(By.XPATH, check_address_xpath)
+                    check_address = check_address_element.text.strip()
+                    if check_address == 'Адрес:':
+                        address_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div[1]/div/p[2]/span'
+                        address_element = driver.find_element(By.XPATH, address_xpath)
+                        address_text = address_element.text
+                except NoSuchElementException:
+                    continue
+            result['Адрес'] = f"{index_text}, {address_text}" if index_text or address_text else ""
+
+        # Получение телефонов
+        if "Телефон" in self.selected_data:
+            phone_numbers = set()
+            for i in range(6, 8):
+                for j in range(2, 6):
+                    for k in range(1, 10):
+                        try:
+                            phone_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div/div/p[{j}]/a[{k}]'
+                            phone_element = driver.find_element(By.XPATH, phone_xpath)
+                            phone = phone_element.text.strip()
+                            check_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div/div/p[{j}]/i'
+                            check_element = driver.find_element(By.XPATH, check_xpath)
+                            check = check_element.text.strip()
+                            if check == 'Телефон:' and phone and ('+7' in phone or '-' in phone):
+                                phone_numbers.add(phone)
+                        except NoSuchElementException:
+                            continue
+            result["Телефон"] = ', '.join(phone_numbers) if phone_numbers else ""
+
         # Получение email
         if "E-mail" in self.selected_data:
             try:
@@ -100,49 +211,6 @@ class Parser:
                         continue
             result["Сайт"] = ', '.join(sites) if sites else ""
 
-        # Получение телефонов
-        if "Телефон" in self.selected_data:
-            phone_numbers = set()
-            for i in range(6, 8):
-                for j in range(2, 6):
-                    for k in range(1, 10):
-                        try:
-                            phone_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div/div/p[{j}]/a[{k}]'
-                            phone_element = driver.find_element(By.XPATH, phone_xpath)
-                            phone = phone_element.text.strip()
-                            check_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div/div/p[{j}]/i'
-                            check_element = driver.find_element(By.XPATH, check_xpath)
-                            check = check_element.text.strip()
-                            if check == 'Телефон:' and phone and ('+7' in phone or '-' in phone):
-                                phone_numbers.add(phone)
-                        except NoSuchElementException:
-                            continue
-            result["Телефон"] = ', '.join(phone_numbers) if phone_numbers else ""
-
-        # Получение полного юридического наименования
-        if 'Полное юридическое наименование' in self.selected_data:
-            try:
-                fullname_element = driver.find_element(By.XPATH, '//a[contains(@href, "/search?type=name")]')
-                result["Полное юридическое наименование"] = fullname_element.text
-            except NoSuchElementException:
-                result["Полное юридическое наименование"] = ""
-        
-        # Получение руководителя
-        if 'Руководитель' in self.selected_data:
-            dirnames = set()
-            for i in range(3,6):
-                try:
-                    dirname_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/table/tbody/tr[2]/td[2]'
-                    dirname_el = driver.find_element(By.XPATH, dirname_xpath)
-                    dirname = dirname_el.text.strip()
-                    dirnames.add(dirname)
-                    # dirname_element = driver.find_element(By.XPATH, '//a[contains(@href, "/man/")]').text
-                except NoSuchElementException:
-                    continue
-            result['Руководитель'] = ''.join(dirnames)
-        
-        # Получение уставного капитала
-        
         return result
 
     def process_inns(self, inn_list, source):

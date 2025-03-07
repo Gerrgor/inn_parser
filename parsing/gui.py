@@ -127,15 +127,23 @@ class App:
         self.data_options = {
             "Полное юридическое наименование": True,
             "Руководитель": True,
-            "Уставной капитал": False,
-            "Численность персонала": False,
-            "Статус": False,
-            "Адрес": False,
+            "Уставной капитал": True,
+            "Численность персонала": True,
+            "Статус": True,
+            "Адрес": True,
             "Юридический адрес": False,
             "Телефон": True,
             "E-mail": True,
             "Сайт": True,
         }
+
+        # Фрейм для чекбоксов и кнопок
+        checkbox_frame = tk.Frame(self.frame, bg="lightblue")
+        checkbox_frame.pack(fill=tk.X, padx=20)
+
+        # Фрейм для чекбоксов
+        checkboxes_frame = tk.Frame(checkbox_frame, bg="lightblue")
+        checkboxes_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         # Создаем чекбоксы для каждого варианта
         for option, enabled in self.data_options.items():
@@ -143,7 +151,7 @@ class App:
             var = self.checkbox_vars.get(option, tk.BooleanVar(value=enabled))
             self.checkbox_vars[option] = var
             cb = tk.Checkbutton(
-                self.frame,
+                checkboxes_frame,
                 text=option,
                 variable=var,
                 bg="lightblue",
@@ -154,6 +162,31 @@ class App:
             )
             cb.pack(anchor=tk.W)
 
+        # Фрейм для кнопок "Выбрать все" и "Очистить выбор"
+        buttons_frame = tk.Frame(checkbox_frame, bg="lightblue")
+        buttons_frame.pack(side=tk.RIGHT, padx=20)
+
+        # Кнопка "Выбрать все"
+        select_all_button = tk.Button(
+            buttons_frame,
+            text="Выбрать все",
+            command=self.select_all_checkboxes,
+            font=("Arial", 12),
+            width=15,
+        )
+        select_all_button.pack(pady=20)
+
+        # Кнопка "Очистить выбор"
+        clear_all_button = tk.Button(
+            buttons_frame,
+            text="Очистить выбор",
+            command=self.clear_all_checkboxes,
+            font=("Arial", 12),
+            width=15,
+        )
+        clear_all_button.pack(pady=20)
+
+        # Фрейм для кнопок "Назад" и "Далее"
         button_frame = tk.Frame(self.frame, bg="lightblue")
         button_frame.pack(pady=40)
 
@@ -163,6 +196,21 @@ class App:
         tk.Button(
             button_frame, text="Далее", command=self.step4, font=("Arial", 14), width=15
         ).pack(side=tk.RIGHT, padx=40)
+
+    def select_all_checkboxes(self):
+        """
+        Выбирает все доступные чекбоксы.
+        """
+        for option, var in self.checkbox_vars.items():
+            if self.data_options[option]:  # Проверяем, что чекбокс доступен
+                var.set(True)
+
+    def clear_all_checkboxes(self):
+        """
+        Снимает выбор со всех чекбоксов.
+        """
+        for var in self.checkbox_vars.values():
+            var.set(False)
 
     def step4(self):
         # Сохраняем выбранные данные для парсинга
