@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from parser import Parser
-from utils import validate_inn_file, validate_save_file
+from utils import validate_inn_file, validate_save_file, validate_column_index
 
 
 class App:
@@ -36,10 +36,10 @@ class App:
 
         tk.Label(
             self.frame, text="Выберите файл с ИНН:", bg="lightblue", font=("Arial", 16)
-        ).pack(pady=20)
+        ).pack(pady=10)
 
         self.entry_inn = tk.Entry(self.frame, width=50, font=("Arial", 14))
-        self.entry_inn.pack(pady=50)
+        self.entry_inn.pack(pady=10)
         self.entry_inn.insert(0, self.inn_file)  # Вставляем сохраненный путь
 
         tk.Button(
@@ -48,10 +48,20 @@ class App:
             command=self.load_inn_file,
             font=("Arial", 14),
             width=15,
-        ).pack(pady=20)
+        ).pack(pady=10)
+
+        # Добавляем поле для ввода номера столбца
+        tk.Label(
+            self.frame, text="Введите номер столбца с ИНН:", bg="lightblue", font=("Arial", 16)
+        ).pack(pady=10)
+
+        self.entry_column = tk.Entry(self.frame, width=10, font=("Arial", 14))
+        self.entry_column.pack(pady=10)
+        if hasattr(self, 'inn_column'):  # Вставляем сохраненное значение, если оно есть
+            self.entry_column.insert(0, self.inn_column)
 
         button_frame = tk.Frame(self.frame, bg="lightblue")
-        button_frame.pack(pady=40)
+        button_frame.pack(pady=20)
 
         tk.Button(
             button_frame, text="Далее", command=self.step2, font=("Arial", 14), width=15
@@ -65,9 +75,25 @@ class App:
             self.inn_file = file_path  # Сохраняем путь к файлу
 
     def step2(self):
-        if not validate_inn_file(self.inn_file):
-            return  # Прерываем выполнение функции, если файл не валиден
+        # Сохраняем номер столбца
+        self.inn_column = self.entry_column.get().strip()
 
+        # Проверяем, что номер столбца является числом
+        if not self.inn_column.isdigit():
+            messagebox.showerror("Ошибка", "Номер столбца должен быть числом.")
+            return
+
+        # Преобразуем номер столбца в целое число
+        column_index = int(self.inn_column)
+
+        # Проверяем файл и номер столбца
+        if not validate_inn_file(self.inn_file):
+            return  # Прерываем выполнение, если файл не валиден
+
+        if not validate_column_index(self.inn_file, column_index):
+            return  # Прерываем выполнение, если номер столбца не валиден
+
+        # Переходим к следующему шагу
         self.clear_frame()
         self.current_step = 2
 

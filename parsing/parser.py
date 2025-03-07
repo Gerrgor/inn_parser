@@ -10,12 +10,20 @@ from tkinter import messagebox
 class Parser:
     def __init__(self):
         self.selected_data = []  # Список выбранных данных для парсинга
+        self.inn_column = 1  # По умолчанию используется первый столбец
 
     def process_data(self, inn_file, save_file, source):
         try:
             # Загружаем данные из файла с ИНН
-            df = pd.read_excel(inn_file, dtype={'ИНН\n\n': str})
-            inn_list = df['ИНН\n\n'].astype(str).str.strip().tolist()
+            df = pd.read_excel(inn_file)
+
+            # Определяем имя столбца с ИНН
+            inn_column_index = int(self.inn_column) - 1  # Преобразуем в индекс (начиная с 0)
+            inn_column_name = df.columns[inn_column_index]  # Получаем имя столбца по индексу
+
+            # Загружаем ИНН из указанного столбца
+            df[inn_column_name] = df[inn_column_name].astype(str).str.strip()
+            inn_list = df[inn_column_name].tolist()
 
             # Обрабатываем ИНН
             results = self.process_inns(inn_list, source)
