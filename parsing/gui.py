@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from parser import Parser
-from utils import validate_inn_file, validate_save_file, validate_column_index
+from utils import validate_inn_file, validate_save_file, validate_column_index, validate_inn_in_column
 
 
 class App:
@@ -38,10 +38,13 @@ class App:
             self.frame, text="Выберите файл с ИНН:", bg="lightblue", font=("Arial", 16)
         ).pack(pady=10)
 
+        # Поле для ввода пути к файлу
         self.entry_inn = tk.Entry(self.frame, width=50, font=("Arial", 14))
         self.entry_inn.pack(pady=10)
-        self.entry_inn.insert(0, self.inn_file)  # Вставляем сохраненный путь
-
+        if hasattr(self, 'inn_file'):  # Вставляем сохраненный путь, если он есть
+            self.entry_inn.insert(0, self.inn_file)  # Вставляем сохраненный путь
+        
+        # Кнопка "Обзор"
         tk.Button(
             self.frame,
             text="Обзор",
@@ -50,7 +53,7 @@ class App:
             width=15,
         ).pack(pady=10)
 
-        # Добавляем поле для ввода номера столбца
+        # Поле для ввода номера столбца
         tk.Label(
             self.frame, text="Введите номер столбца с ИНН:", bg="lightblue", font=("Arial", 16)
         ).pack(pady=10)
@@ -60,9 +63,9 @@ class App:
         if hasattr(self, 'inn_column'):  # Вставляем сохраненное значение, если оно есть
             self.entry_column.insert(0, self.inn_column)
 
+        # Кнопка "Далее"
         button_frame = tk.Frame(self.frame, bg="lightblue")
         button_frame.pack(pady=20)
-
         tk.Button(
             button_frame, text="Далее", command=self.step2, font=("Arial", 14), width=15
         ).pack()
@@ -70,28 +73,38 @@ class App:
     def load_inn_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
         if file_path:
-            self.entry_inn.delete(0, tk.END)
-            self.entry_inn.insert(0, file_path)
+            if hasattr(self, 'entry_inn'):  # Проверяем, существует ли виджет
+                self.entry_inn.delete(0, tk.END)
+                self.entry_inn.insert(0, file_path)
             self.inn_file = file_path  # Сохраняем путь к файлу
 
-    def step2(self):
-        # Сохраняем номер столбца
-        self.inn_column = self.entry_column.get().strip()
+    def step2(self, returning=False):
+        if not returning:
+            # Сохраняем номер столбца
+            if hasattr(self, 'entry_column'):
+                self.inn_column = self.entry_column.get().strip()
+            else:
+                self.inn_column = ""
 
-        # Проверяем, что номер столбца является числом
-        if not self.inn_column.isdigit():
-            messagebox.showerror("Ошибка", "Номер столбца должен быть числом.")
-            return
+            # Пропускаем валидацию номера столбца, если мы возвращаемся назад
+            if not self.inn_column or not self.inn_column.isdigit():
+                messagebox.showerror("Ошибка", "Номер столбца должен быть числом.")
+                return
 
-        # Преобразуем номер столбца в целое число
-        column_index = int(self.inn_column)
+            # Преобразуем номер столбца в целое число
+            column_index = int(self.inn_column)
 
-        # Проверяем файл и номер столбца
-        if not validate_inn_file(self.inn_file):
-            return  # Прерываем выполнение, если файл не валиден
-
-        if not validate_column_index(self.inn_file, column_index):
-            return  # Прерываем выполнение, если номер столбца не валиден
+            # Проверяем файл
+            if not validate_inn_file(self.inn_file):
+                return  # Прерываем выполнение, если файл не валиден
+            
+            # Проверяем номер столбца
+            if not validate_column_index(self.inn_file, column_index):
+                return  # Прерываем выполнение, если номер столбца не валиден
+            
+            # Проверяем, что в столбце есть хотя бы один корректный ИНН
+            if not validate_inn_in_column(self.inn_file, column_index):
+                return  # Прерываем выполнение, если в столбце нет ИНН
 
         # Переходим к следующему шагу
         self.clear_frame()
@@ -104,10 +117,13 @@ class App:
             font=("Arial", 16),
         ).pack(pady=20)
 
+        # Поле для ввода пути сохранения
         self.entry_save = tk.Entry(self.frame, width=50, font=("Arial", 14))
         self.entry_save.pack(pady=50)
-        self.entry_save.insert(0, self.save_file_path)  # Вставляем сохраненный путь
-
+        if hasattr(self, 'save_file_path'):  # Вставляем сохраненный путь, если он есть
+            self.entry_save.insert(0, self.save_file_path)
+        
+        # Кнопка "Обзор"
         tk.Button(
             self.frame,
             text="Обзор",
@@ -116,9 +132,9 @@ class App:
             width=15,
         ).pack(pady=20)
 
+        # Кнопки "Назад" и "Далее"
         button_frame = tk.Frame(self.frame, bg="lightblue")
         button_frame.pack(pady=40)
-
         tk.Button(
             button_frame, text="Назад", command=self.step1, font=("Arial", 14), width=15
         ).pack(side=tk.LEFT, padx=40)
@@ -131,8 +147,9 @@ class App:
             defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")]
         )
         if file_path:
-            self.entry_save.delete(0, tk.END)
-            self.entry_save.insert(0, file_path)
+            if hasattr(self, 'entry_save'):  # Проверяем, существует ли виджет
+                self.entry_save.delete(0, tk.END)
+                self.entry_save.insert(0, file_path)
             self.save_file_path = file_path  # Сохраняем путь для сохранения
 
     def step3(self):
@@ -217,7 +234,7 @@ class App:
         button_frame.pack(pady=40)
 
         tk.Button(
-            button_frame, text="Назад", command=self.step2, font=("Arial", 14), width=15
+            button_frame, text="Назад", command=lambda: self.step2(returning=True), font=("Arial", 14), width=15
         ).pack(side=tk.LEFT, padx=40)
         tk.Button(
             button_frame, text="Далее", command=self.step4, font=("Arial", 14), width=15
@@ -319,5 +336,8 @@ class App:
         # Удаляем ссылки на уничтоженные виджеты
         if hasattr(self, "entry_inn"):
             del self.entry_inn
+        if hasattr(self, "entry_column"):
+            del self.entry_column
         if hasattr(self, "entry_save"):
             del self.entry_save
+

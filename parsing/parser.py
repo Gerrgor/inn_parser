@@ -233,13 +233,20 @@ class Parser:
                 results.append({'ИНН': inn, **{key: "" for key in self.selected_data}})
                 continue
             
-            self.search_inn(driver, inn, source)
-            contact_info = self.get_contact_info(driver)
-
-            result = {'ИНН': inn, **contact_info}
-            if tuple(result.items()) not in seen_results:
-                seen_results.add(tuple(result.items()))
-                results.append(result)
+            try:
+                self.search_inn(driver, inn, source)
+                contact_info = self.get_contact_info(driver)
+                if not contact_info:
+                    print(f"По ИНН {inn} информация не найдена. Добавление пустой строки...")
+                    results.append({'ИНН': inn, **{key: "" for key in self.selected_data}})
+                    continue
+                result = {'ИНН': inn, **contact_info}
+                if tuple(result.items()) not in seen_results:
+                    seen_results.add(tuple(result.items()))
+                    results.append(result)
+            except Exception as e:
+                print(f"Ошибка при обработке ИНН {inn}: {e}. Добавление пустой строки...")
+                results.append({'ИНН': inn, **{key: "" for key in self.selected_data}})
 
             # Возврат на главную страницу для нового поиска
             driver.get(source)
