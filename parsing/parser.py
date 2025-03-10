@@ -56,18 +56,29 @@ class Parser:
 
     def search_inn(self, driver, inn, source):
         driver.get(source)  # Переходим на выбранный сайт
-        wait = WebDriverWait(driver, 5)
+        wait = WebDriverWait(driver, 3)
 
         # Пример для List-org
         if source == "https://www.list-org.com/":
+            # Вводим ИНН в поисковую строку
             search_input = wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div[2]/div[1]/div[2]/form/div[1]/input')))
             search_input.clear()
             search_input.send_keys(inn)
 
+            # Нажимаем кнопку поиска
             search_button = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div[2]/div[1]/div[2]/form/div[1]/button')))
             search_button.click()
             self.wait_for_captcha(driver)
 
+            # Проверяем, есть ли сообщение "Найдено 0 организаций"
+            try:
+                result_message = wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div[2]/div[1]/p')))
+                if "Найдено 0 организаций" in result_message.text:
+                    return False  # Возвращаем False, чтобы пропустить этот ИНН
+            except TimeoutException:
+                pass  # Сообщение не найдено, продолжаем обработку
+
+            # Если сообщение не найдено, переходим к результату
             try:
                 result_link = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div[2]/div[1]/div[1]/div/p[1]/label/a')))
             except:
@@ -75,9 +86,12 @@ class Parser:
             
             result_link.click()
             self.wait_for_captcha(driver)
+            return True  # Возвращаем True, если информация найдена
+
         else:
             # Добавьте обработку для других источников
             print(f"Источник {source} пока не поддерживается.")
+            return False
 
     def get_contact_info(self, driver):
         result = {}
@@ -174,6 +188,26 @@ class Parser:
                     continue
             result['Адрес'] = f"{index_text}, {address_text}" if index_text or address_text else ""
 
+        # Получение юридического адреса
+        if 'Юридический адрес' in self.selected_data:
+            legadd_text = ""  # Инициализация переменной
+            for i in range(5, 8):
+                for j in range(1,5):
+                    try:
+                        check_legadd_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div[1]/div/p[{j}]/i'
+                        check_legadd_element = driver.find_element(By.XPATH, check_legadd_xpath)
+                        check_legadd = check_legadd_element.text.strip()
+                        if check_legadd == 'Юридический адрес:':
+                            legadd_xpath = f'/html/body/div[1]/div[2]/div[1]/div[{i}]/div/div[1]/div/p[{j}]/span'
+                            legadd_element = driver.find_element(By.XPATH, legadd_xpath)
+                            legadd_text = legadd_element.text.strip()
+                            if legadd_text.startswith("Юридический адрес: "):
+                                legadd_text = legadd_text.replace("Юридический адрес: ", "").strip()
+                    except NoSuchElementException:
+                        continue
+            result['Юридический адрес'] = legadd_text
+
+
         # Получение телефонов
         if "Телефон" in self.selected_data:
             phone_numbers = set()
@@ -234,16 +268,27 @@ class Parser:
                 continue
             
             try:
-                self.search_inn(driver, inn, source)
+                # Выполняем поиск ИНН
+                info_found = self.search_inn(driver, inn, source)
+                if not info_found:
+                    # Если информация не найдена, добавляем пустую строку
+                    print(f"По ИНН {inn} информация не найдена. Добавление пустой строки...")
+                    results.append({'ИНН': inn, **{key: "" for key in self.selected_data}})
+                    continue
+
+                # Если информация найдена, извлекаем её
                 contact_info = self.get_contact_info(driver)
                 if not contact_info:
                     print(f"По ИНН {inn} информация не найдена. Добавление пустой строки...")
                     results.append({'ИНН': inn, **{key: "" for key in self.selected_data}})
                     continue
+
+                # Формируем результат
                 result = {'ИНН': inn, **contact_info}
                 if tuple(result.items()) not in seen_results:
                     seen_results.add(tuple(result.items()))
                     results.append(result)
+
             except Exception as e:
                 print(f"Ошибка при обработке ИНН {inn}: {e}. Добавление пустой строки...")
                 results.append({'ИНН': inn, **{key: "" for key in self.selected_data}})
