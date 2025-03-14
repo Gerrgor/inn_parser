@@ -6,14 +6,14 @@ A Python-based data parsing tool designed to extract contact information (emails
 
 - **GUI Interface**: Simple and intuitive graphical interface for selecting input files, saving results, and choosing data sources.
 - **Multi-Step Workflow**: Guides users through file selection, saving options, and source selection.
-- **Selenium Automation**: Automates web scraping to extract contact information from the list-org.com and zachestnyibiznes.ru websites.
+- **Selenium Automation**: Automates web scraping to extract contact information from the List-org and Zachestnyibiznes websites.
 - **Error Handling**: Includes validation for input files and user-friendly error messages.
 - **Excel Output**: Saves parsed data (INN, email, website, phone numbers) in a structured Excel file.
 
 ## How It Works
 
 1. **Input**: Provide an Excel file containing a list of INNs.
-2. **Source Selection**: Choose the data source (currently supports list-org.com and zachestnyibiznes.ru).
+2. **Source Selection**: Choose the data source (currently supports List-org and Zachestnyibiznes).
 3. **Parsing**: The tool automatically navigates the selected website and extracts contact information and other company details.
 4. **Output**: Results are saved in an Excel file at the specified location.
 
